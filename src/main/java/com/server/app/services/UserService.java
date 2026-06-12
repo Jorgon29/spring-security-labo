@@ -1,5 +1,7 @@
 package com.server.app.services;
 
+import com.server.app.services.validators.EmailUniquenessValidator;
+import com.server.app.services.validators.NameUniquenessValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,11 +25,13 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final EmailUniquenessValidator emailValidator;
+    private final NameUniquenessValidator nameValidator;
 
     @Transactional
     public User create(UserCreateDto dto) {
-        uniqueUsername(dto.getUsername(), null);
-        uniqueEmail(dto.getEmail(), null);
+        nameValidator.uniqueUsername(dto.getUsername(), null);
+        emailValidator.uniqueEmail(dto.getEmail(), null);
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setName(dto.getName());
@@ -57,7 +61,7 @@ public class UserService {
         }
 
         if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
-            uniqueUsername(dto.getUsername(), userId);
+            nameValidator.uniqueUsername(dto.getUsername(), userId);
             user.setUsername(dto.getUsername());
         }
 
@@ -70,7 +74,7 @@ public class UserService {
         }
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
-            uniqueEmail(dto.getEmail(), userId);
+            emailValidator.uniqueEmail(dto.getEmail(), userId);
             user.setEmail(dto.getEmail());
         }
 
@@ -85,22 +89,6 @@ public class UserService {
         }
 
         return userRepository.save(user);
-    }
-
-    private void uniqueUsername(String username, Integer id) {
-        userRepository.findUserByUsername(username).ifPresent(existing -> {
-            if (id == null || existing.getId() != id) {
-                throw new ConfictException("El nombre de usuario ya está en uso");
-            }
-        });
-    }
-
-    private void uniqueEmail(String email, Integer id) {
-        userRepository.findUserByEmail(email).ifPresent(existing -> {
-            if (id == null || existing.getId() != id) {
-                throw new ConfictException("El correo electrónico ya está en uso");
-            }
-        });
     }
 
     public User findById(int id) {
