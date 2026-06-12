@@ -6,7 +6,7 @@ import java.util.Set;
 public class SecurityRules {
 
     public static final Map<String, Set<String>> PUBLIC = Map.of(
-            "GET", Set.of("/api/public/info"),
+            "GET", Set.of("/api/public/info", "/api/auth/login", "/api/auth/signup"),
             "POST", Set.of("/api/auth/login","/api/auth/signup")
     );
 
