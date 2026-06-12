@@ -1,6 +1,8 @@
 package com.server.app.controllers;
 
+import com.server.app.dto.auth.UpdatePasswordDto;
 import com.server.app.dto.auth.login.LoginDto;
+import com.server.app.dto.auth.login.UserDataDto;
 import com.server.app.dto.auth.login.UserDataWithTokenDto;
 import com.server.app.dto.auth.profile.ProfileResponseDto;
 import com.server.app.dto.auth.profile.UpdateProfileDto;
@@ -40,5 +42,8 @@ public class AuthController {
         return ResponseEntity.ok(authService.updateProfile(user, dto));
     }
 
-
+    @PutMapping("update/password")
+    public ResponseEntity<UserDataDto> updatePassword(@AuthenticationPrincipal User user, @RequestBody @Valid UpdatePasswordDto dto){
+        return ResponseEntity.ok(authService.updatePassword(user, dto));
+    }
 }

@@ -1,7 +1,9 @@
 package com.server.app.services;
 
 import com.server.app.config.JsonWebToken;
+import com.server.app.dto.auth.UpdatePasswordDto;
 import com.server.app.dto.auth.login.LoginDto;
+import com.server.app.dto.auth.login.UserDataDto;
 import com.server.app.dto.auth.login.UserDataWithTokenDto;
 import com.server.app.dto.auth.login.mappers.UserDataMapper;
 import com.server.app.dto.auth.profile.ProfileResponseDto;
@@ -9,8 +11,10 @@ import com.server.app.dto.auth.profile.UpdateProfileDto;
 import com.server.app.dto.auth.signup.SignUpDto;
 import com.server.app.entities.Role;
 import com.server.app.entities.User;
+import com.server.app.exceptions.BadRequestException;
 import com.server.app.exceptions.NotFoundException;
 import com.server.app.exceptions.ServerException;
+import com.server.app.exceptions.UnauthorizedException;
 import com.server.app.repositories.RoleRepository;
 import com.server.app.repositories.UserRepository;
 import com.server.app.services.validators.EmailUniquenessValidator;
@@ -107,5 +111,23 @@ public class AuthService {
         String token = jsonWebToken.createToken(user);
 
         return new UserDataWithTokenDto(token, userDataMapper.toUserData(finished));
+    }
+
+    @Transactional
+    public UserDataDto updatePassword(User user, UpdatePasswordDto dto) {
+        if (!dto.getNewpassword().equals(dto.getConfirmpassword())) {
+            throw new BadRequestException("La nueva contraseña y la confirmación no coinciden.");
+        }
+
+        if (!passwordEncoder.matches(dto.getOldpassword(), user.getPassword())) {
+            throw new UnauthorizedException("La contraseña actual es incorrecta.");
+        }
+
+        String encryptedPassword = passwordEncoder.encode(dto.getNewpassword());
+        user.setPassword(encryptedPassword);
+
+        User updatedUser = userRepository.save(user);
+
+        return userDataMapper.toUserData(updatedUser);
     }
 }
