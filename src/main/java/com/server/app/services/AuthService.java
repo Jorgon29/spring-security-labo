@@ -2,8 +2,10 @@ package com.server.app.services;
 
 import com.server.app.config.JsonWebToken;
 import com.server.app.dto.auth.login.LoginDto;
-import com.server.app.dto.auth.login.LoginDtoResponse;
+import com.server.app.dto.auth.login.UserDataWithTokenDto;
 import com.server.app.dto.auth.login.mappers.UserDataMapper;
+import com.server.app.dto.auth.profile.ProfileResponseDto;
+import com.server.app.dto.auth.profile.UpdateProfileDto;
 import com.server.app.dto.auth.signup.SignUpDto;
 import com.server.app.entities.Role;
 import com.server.app.entities.User;
@@ -13,6 +15,7 @@ import com.server.app.repositories.RoleRepository;
 import com.server.app.repositories.UserRepository;
 import com.server.app.services.validators.EmailUniquenessValidator;
 import com.server.app.services.validators.NameUniquenessValidator;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,7 +31,7 @@ public class AuthService {
     private final NameUniquenessValidator nameValidator;
     private final RoleRepository roleRepository;
 
-    public LoginDtoResponse login(LoginDto login) {
+    public UserDataWithTokenDto login(LoginDto login) {
         User user = userRepository.findUserByUsername(login.getUsername())
                 .orElseThrow(() -> new NotFoundException("Credenciales inválidas"));
 
@@ -38,10 +41,11 @@ public class AuthService {
 
         String token = jsonWebToken.createToken(user);
 
-        return new LoginDtoResponse(token, userDataMapper.toUserData(user));
+        return new UserDataWithTokenDto(token, userDataMapper.toUserData(user));
     }
 
-    public LoginDtoResponse signup(SignUpDto dto){
+    @Transactional
+    public UserDataWithTokenDto signup(SignUpDto dto){
         nameValidator.uniqueUsername(dto.getUsername(), null);
         emailValidator.uniqueEmail(dto.getEmail(), null);
         User user = new User();
@@ -63,6 +67,45 @@ public class AuthService {
         User finished = userRepository.save(user);
         String token = jsonWebToken.createToken(finished);
 
-        return new LoginDtoResponse(token, userDataMapper.toUserData(finished));
+        return new UserDataWithTokenDto(token, userDataMapper.toUserData(finished));
+    }
+
+    public ProfileResponseDto getProfile(User user) {
+
+        return ProfileResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .username(user.getUsername())
+                .surname(user.getSurname())
+                .role(user.getRole())
+                .build();
+    }
+
+    @Transactional
+    public UserDataWithTokenDto updateProfile(User user, UpdateProfileDto dto) {
+        if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
+            nameValidator.uniqueUsername(dto.getUsername(), user.getId());
+            user.setUsername(dto.getUsername());
+        }
+
+        if (dto.getName() != null && !dto.getName().isBlank()) {
+            user.setName(dto.getName());
+        }
+
+        if (dto.getSurname() != null && !dto.getSurname().isBlank()) {
+            user.setSurname(dto.getSurname());
+        }
+
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            emailValidator.uniqueEmail(dto.getEmail(), user.getId());
+            user.setEmail(dto.getEmail());
+        }
+
+        User finished = userRepository.save(user);
+
+        String token = jsonWebToken.createToken(user);
+
+        return new UserDataWithTokenDto(token, userDataMapper.toUserData(finished));
     }
 }
