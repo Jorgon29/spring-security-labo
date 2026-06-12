@@ -37,7 +37,7 @@ public class UserService {
 
         if (dto.getRole() != null) {
             Role role = roleRepository.findById(dto.getRole())
-                    .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+                    .orElseThrow(() -> new NotFoundException("Rol no encontrado"));
             user.setRole(role);
         }
 
@@ -101,5 +101,10 @@ public class UserService {
                 throw new ConfictException("El correo electrónico ya está en uso");
             }
         });
+    }
+
+    public User findById(int id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
     }
 }

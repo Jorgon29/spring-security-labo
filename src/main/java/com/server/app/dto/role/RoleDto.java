@@ -2,6 +2,7 @@ package com.server.app.dto.role;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Set;
@@ -9,6 +10,7 @@ import java.util.Set;
 import com.server.app.dto.permission.AssingPermissionDto;
 
 @Data
+@Builder
 public class RoleDto {
 
     @NotBlank(message = "El nombre del rol es obligatorio")
