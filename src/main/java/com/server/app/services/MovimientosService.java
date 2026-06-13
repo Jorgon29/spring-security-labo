@@ -61,7 +61,14 @@ public class MovimientosService {
             throw new BadRequestException("Fondos insuficientes");
         }
         movimiento.setFecha(new Date(System.currentTimeMillis()));
+        movimiento.getCuentaOrigen().setSaldo_base(
+                movimiento.getCuentaOrigen().getSaldo_base().subtract(movimiento.getMonto())
+        );
+        movimiento.getCuentaDestino().setSaldo_base(
+                movimiento.getCuentaDestino().getSaldo_base().add(movimiento.getMonto())
+        );
         movimientoRepository.save(movimiento);
+
     }
 
     public Pagination<CategoriaResponseDto> getCategorias(Pageable pageable) {

@@ -27,5 +27,4 @@ public class Categoria {
     @JoinColumn(name = "categoria_padre_id")
     private Categoria padre;
 
-
 }
